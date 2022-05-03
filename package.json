@@ -2,10 +2,11 @@
   "name": "iotw-slackbot",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./slackbot/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": ""
+    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
+    "build": "npx tsc",
+    "start": "npm run build && node ./dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,19 @@
   },
   "homepage": "https://github.com/adamhb123/IOTW-Slackbot#readme",
   "dependencies": {
-    "@slack/web-api": "^6.7.1"
+    "@slack/web-api": "^6.7.1",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.22.0",
+    "@typescript-eslint/parser": "^5.22.0",
+    "eslint": "^8.14.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-tsdoc": "^0.2.16",
+    "prettier": "^2.6.2",
+    "tsdoc": "^0.0.4"
   }
 }
