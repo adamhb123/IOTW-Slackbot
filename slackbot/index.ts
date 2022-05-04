@@ -1,10 +1,10 @@
-import * as SetupDotenv from "./misc/SetupDotenv";
+import Dotenv from "./misc/Dotenv";
 import * as Slackbot from "./Slackbot";
 import * as Server from "./Server";
 
 function main() {
+  Dotenv();
   Server.run();
-  SetupDotenv.initialize();
   Slackbot.initialize();
 
   Slackbot.sendMessage(
