@@ -1,6 +1,6 @@
 import { WebClient } from "@slack/web-api";
 import Config from "../Config";
-import { Channel, typeofChannel } from "./misc/Types";
+import { WhitelistedChannel, isTypeOfChannel } from "./misc/Types";
 
 let client: WebClient;
 
@@ -15,17 +15,17 @@ export function initialize() {
 
 export async function sendMessage(
   text: string,
-  channels?: Channel | Channel[],
+  channels?: WhitelistedChannel | WhitelistedChannel[],
   callback?: (
     result: { success: boolean; errors: string[] },
     ...callbackArgs: string[]
   ) => any,
   ...callbackArgs: string[]
 ): Promise<any> {
-  // Convert 'channels' parameter to Channel[]
-  let recipientChannels: Channel[];
+  // Convert 'channels' parameter to WhitelistedChannel[]
+  let recipientChannels: WhitelistedChannel[];
   let errors: string[] = [];
-  if (typeofChannel(channels)) recipientChannels = [channels];
+  if (isTypeOfChannel(channels)) recipientChannels = [channels];
   else if (!channels) channels = [...Config.WhitelistedChannels];
   // Send message to each channel, catching errors if need be
   for (const channel of channels) {
