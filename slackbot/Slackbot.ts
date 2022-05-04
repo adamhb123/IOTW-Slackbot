@@ -21,8 +21,6 @@ export async function sendMessage(
   ) => any,
   ...callbackArgs: any[]
 ): Promise<any> {
-  // Convert 'channels' parameter to WhitelistedChannel[]
-  // Send message to each channel, catching errors if need be
   let error: string = "";
   try {
     await client.chat.postMessage({
@@ -34,7 +32,7 @@ export async function sendMessage(
   }
   const result = {
     success: !error,
-    error: error
+    error: error,
   };
   return callback ? callback.call(null, result, ...callbackArgs) : result;
 }
