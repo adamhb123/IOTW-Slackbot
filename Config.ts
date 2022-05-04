@@ -1,2 +1,7 @@
-// Type of "enabledChannels" members defined in slackbot/misc/Types.ts
-export const enabledChannels = ["#general"] as const;
+export const Config = {
+    // Set whether or not channels should be restricted
+    RestrictChannels: true,
+    // If so, list whitelisted channels below
+    WhitelistedChannels : ["#general"] as const
+}
+export default Config;
