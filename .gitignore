@@ -30,5 +30,3 @@ Thumbs.db
 # Ignore built ts files
 dist/**/*
 
-# Ignore changes to .env by default (it should serve as a template)
-.env
