@@ -26,7 +26,7 @@ export async function sendMessage(
   let recipientChannels: Channel[];
   let errors: string[] = [];
   if (typeofChannel(channels)) recipientChannels = [channels];
-  else if (!channels) channels = [...whitelistedChannels];
+  else if (!channels) channels = [...Config.WhitelistedChannels];
   // Send message to each channel, catching errors if need be
   for (const channel of channels) {
     try {
