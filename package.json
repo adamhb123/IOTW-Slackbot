@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/adamhb123/IOTW-Slackbot#readme",
   "dependencies": {
+    "@slack/bolt": "^3.11.0",
     "@slack/events-api": "^3.0.1",
     "@slack/web-api": "^6.7.1",
     "dotenv": "^16.0.0",

@@ -1,15 +1,33 @@
-import { WebClient } from "@slack/web-api";
+//import { WebClient } from "@slack/web-api";
+//import { createEventAdapter } from "@slack/events-api";
+import { Config } from "./Config";
+const { App } = require('@slack/bolt');
+const app = new App({
+  signingSecret: Config.slackbotSigningSecret,
+  token: process.env.SLACK_BOT_TOKEN,
+});
 
-let client: WebClient;
+(async () => {
+  // Start the app
+  await app.start(process.env.PORT || 3000);
+  console.log('⚡️ Bolt app is running!');
+})();
+
+function _initializeEventHooks() {
+  app.message((event: any) => {
+    console.log("Received: ", event);
+  });
+}
 
 export function initialize() {
-  const token = process.env.SLACKBOT_TOKEN;
+  const token = Config.slackbotToken;
   if (!token)
     throw new Error(
       "No token provided! Please configure your dotenv / environment variables!\nConfused? Read the README."
     );
-  client = new WebClient(token);
+  _initializeEventHooks();
 }
+
 export default initialize;
 
 export async function sendMessage(
@@ -23,7 +41,7 @@ export async function sendMessage(
 ): Promise<any> {
   let error: string = "";
   try {
-    await client.chat.postMessage({
+    await app.chat.postMessage({
       channel: channel,
       text: text,
     });

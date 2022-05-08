@@ -1,12 +1,7 @@
-import Dotenv from "./misc/Dotenv";
 import * as Slackbot from "./Slackbot";
-import * as Server from "./Server";
 
 function main() {
-  Dotenv();
-  Server.run();
   Slackbot.initialize();
-
   Slackbot.sendMessage(
     "swag",
     "#imageoftheweek",
