@@ -1,84 +1,27 @@
-import { Config } from './Config';
-const { App } = require("@slack/bolt");
+// External modules
+import { App } from "@slack/bolt";
+// Local modules
+import Config from "./config";
+import { postFormData } from "./requests";
 
 const app = new App({
-  signingSecret: Config.slackbotSigningSecret,
-  token: Config.slackbotToken,
-  appToken: Config.slackbotAppToken,
+  signingSecret: Config.slackbot.signingSecret,
+  token: Config.slackbot.token,
+  appToken: Config.slackbot.appToken,
   socketMode: true,
 });
 
 interface ResponseOptions {
-chatResponse?: string;
+  chatResponse?: string;
   callback?: (sayResult: any, ...args: any[]) => any;
   callbackArgs?: any[];
 }
 
 interface TriggerOptions {
   onMentionOnly: boolean;
+  onFileOnly: boolean;
   enforceWhitespace: boolean; // force trigger word to be surrounded by whitespace (for example, if your trigger word was 'balm', a message containing 'embalming' would not trigger)
-  enforceCapitalization: boolean; // force trigger word to match exact case
-}
-
-interface EventResponseParams {
-  say: Function,
-  payload: {
-    client_msg_id: string,
-    type: string,
-    text: string,
-    files?: [Object],
-    user: string,
-    ts: string,
-    team: string,
-    blocks: [
-        Object
-    ],
-    channel: string,
-    event_ts: string
-  };
-}
-
-interface SlackFile {
-    id: string,
-    created: number,
-    timestamp: number,
-    name: string,
-    title: string,
-    mimetype: string,
-    filetype: string,
-    pretty_type: string,
-    user: string,
-    editable: boolean,
-    size: number,
-    mode: string,
-    is_external: boolean,
-    external_type: string,
-    is_public: boolean,
-    public_url_shared: boolean,
-    display_as_bot: boolean,
-    username: string,
-    url_private: string,
-    url_private_download: string,
-    thumb_64: string,
-    thumb_80: string,
-    thumb_360: string,
-    thumb_360_w: number,
-    thumb_360_h: number,
-    thumb_160: string,
-    thumb_360_gif: string,
-    image_exif_rotation: number,
-    original_w: number,
-    original_h: number,
-    deanimate_gif: string,
-    pjpeg: string,
-    permalink: string,
-    permalink_public: string,
-    comments_count: number,
-    is_starred: boolean,
-    channels: [string],
-    groups: Array<any>,
-    ims: Array<any>,
-    has_rich_preview: boolean
+  enforceCaseSensitivity: boolean; // force trigger word to match exact case
 }
 
 export async function getBotChannels() {
@@ -86,7 +29,7 @@ export async function getBotChannels() {
    * Gets a list of channels of which the bot is a member
    */
   let list = await app.client.conversations.list();
-  return list.channels.filter((_channel: any) => _channel.is_member);
+  return list.channels?.filter((_channel: any) => _channel.is_member);
 }
 
 export async function sendMessage(text: string, channels?: string[]) {
@@ -94,7 +37,7 @@ export async function sendMessage(text: string, channels?: string[]) {
    * Sends a one-shot message to every channel specified in the 'channels' array.
    */
   let botChannels = await getBotChannels();
-  if (!channels) channels = botChannels.map((_channel: any) => _channel.id);
+  if (!channels) channels = botChannels?.map((_channel: any) => _channel.id);
   if (!channels) {
     console.error(
       "Bot either not a member of or not allowed to post in any channels."
@@ -103,16 +46,6 @@ export async function sendMessage(text: string, channels?: string[]) {
   }
   for (let channel of channels) {
     // Grab ID if given channel name
-    if (channel[0] === "#")
-      channel = botChannels.filter(
-        (_channel: any) => _channel.name === channel.substring(1)
-      );
-    if (!botChannels.map((_channel: any) => _channel.id).includes(channel)) {
-      console.error(
-        `Cannot send messages in channel: #${channel} ... Check for typo in provided parameter, permissions, etc...`
-      );
-      continue;
-    }
     app.client.chat.postMessage({
       channel: channel,
       text: text,
@@ -123,9 +56,8 @@ export async function sendMessage(text: string, channels?: string[]) {
 function addTrigger(
   triggerPhrase: string | null,
   triggerOptions: TriggerOptions,
-  responseOptions: ResponseOptions,
+  responseOptions: ResponseOptions
 ) {
-  // Need to add only on mention functionality
   /*
    * Adds a trigger that triggers on the given 'triggerPhrase'.
    * Upon activation, performs the following operations (if specified in responseOptions)
@@ -134,31 +66,27 @@ function addTrigger(
    * Note: listeners must be added before starting the app
    */
 
-  console.log("trig",triggerPhrase);
-  const onTriggered = async (responseParams: EventResponseParams) => {
+  console.log("trig", triggerPhrase);
+  async function onTriggered(responseParams: any) {
     try {
-      if(triggerOptions.onMentionOnly && triggerPhrase){
-        const messageText = responseParams.payload.text;
-        if(!messageText.toLowerCase().includes(triggerPhrase)) return; // Includes trigger phrase?
-        if(triggerOptions.enforceWhitespace && !messageText.toLowerCase().split(" ").includes(triggerPhrase)){
-          console.log(messageText.split(" "));
-          console.log("FUCK");
-          return;
-        } // Whitespace around trigger phrase? (works)
-        if(triggerOptions.enforceCapitalization){ // Check case sensitive / exact match
-          let found: boolean = false;
+      console.log("PAYLOAD: ");
+      console.log(responseParams.payload);
+      const messageText = responseParams.payload.text;
+      if (triggerPhrase) {
+        if (!messageText.toLowerCase().includes(triggerPhrase)) return; // Includes trigger phrase?
+        if (
+          triggerOptions.enforceWhitespace &&
+          !messageText.toLowerCase().split(" ").includes(triggerPhrase)
+        )
+          return; // Whitespace enforcement
+        if (triggerOptions.enforceCaseSensitivity) {
+          // Case sensitivity enforcement
           let matches = messageText.match(new RegExp(triggerPhrase, "gi"));
-          if(matches){
-            for(const potentialTrigger of matches) { // Case insensitive trigger retrieval
-              if(potentialTrigger === triggerPhrase) {
-                found = true;
-                break;
-              }
-            }
-          }
-          if(!found) return;
+          if (!matches || !(<Array<string>>matches).includes(triggerPhrase))
+            return;
         }
       }
+      //if(triggerOptions.onFileOnly && responseParams.payload.)
       await responseParams.say({
         channel: responseParams.payload.channel,
         text: responseOptions.chatResponse,
@@ -172,24 +100,36 @@ function addTrigger(
       console.error(error);
     }
   }
-  app.event(triggerOptions.onMentionOnly ? "app_mention" : "message", onTriggered);
+  app.event(
+    triggerOptions.onMentionOnly ? "app_mention" : "message", // Mention resolution
+    onTriggered
+  );
 }
 
 /*
  * Slackbot Setup
  */
-addTrigger("upload", {
-  onMentionOnly: true,
-  enforceWhitespace: true,
-  enforceCapitalization: false
-}, {
-  chatResponse: "Received!",
-  callback: (responseParams: EventResponseParams) => {
-    console.log(responseParams);
-    if(responseParams.payload.files) console.log(responseParams.payload.files);
+addTrigger(
+  "upload",
+  {
+    onMentionOnly: true,
+    onFileOnly: true,
+    enforceWhitespace: true,
+    enforceCaseSensitivity: false,
   },
-});
+  {
+    chatResponse: "Received!",
+    callback: (eventResponse: any) => {
+      console.log(eventResponse);
+      if (eventResponse.payload.files) console.log(eventResponse.payload.files);
+      postFormData("upload", {
+        userID: eventResponse.payload.user,
+        files: eventResponse.payload.files,
+      }).then((postResponse) => console.log(postResponse));
+    },
+  }
+);
 
-app.start(Config.slackbotPort || 3000);
+app.start(`${Config.slackbot.host}:${Config.slackbot.port}`);
 sendMessage("amugg");
 console.log("⚡️ Bolt app is running!");
