@@ -24,8 +24,17 @@ interface TriggerOptions {
   enforceCaseSensitivity: boolean; // force trigger word to match exact case
 }
 
+export async function getUserProfileDataFromUID(uid: string) {
+  console.log("FUCKER");
+  const userInfo = await app.client.users.profile.get({
+    user: uid,
+    include_labels: false,
+  });
+  return userInfo.profile;
+}
+
 export async function getBotChannels() {
-  /*
+  /*l
    * Gets a list of channels of which the bot is a member
    */
   let list = await app.client.conversations.list();
@@ -39,10 +48,10 @@ export async function sendMessage(text: string, channels?: string[]) {
   let botChannels = await getBotChannels();
   if (!channels) channels = botChannels?.map((_channel: any) => _channel.id);
   if (!channels) {
-    console.error(
-      "Bot either not a member of or not allowed to post in any channels."
-    );
-    return;
+    const errMsg =
+      "Bot either not a member of or not allowed to post in any channels.";
+    console.error(errMsg);
+    return new Error(errMsg);
   }
   for (let channel of channels) {
     // Grab ID if given channel name
@@ -65,8 +74,6 @@ function addTrigger(
    *  - Runs 'callback' with 'callbackArgs'
    * Note: listeners must be added before starting the app
    */
-
-  console.log("trig", triggerPhrase);
   async function onTriggered(responseParams: any) {
     try {
       console.log("PAYLOAD: ");
@@ -114,16 +121,18 @@ addTrigger(
   {
     onMentionOnly: true,
     onFileOnly: true,
-    enforceWhitespace: true,
+    enforceWhitespace: false,
     enforceCaseSensitivity: false,
   },
   {
     chatResponse: "Received!",
-    callback: (eventResponse: any) => {
-      console.log(eventResponse);
+    callback: async (eventResponse: any) => {
       if (eventResponse.payload.files) console.log(eventResponse.payload.files);
       postFormData("upload", {
         userID: eventResponse.payload.user,
+        userProfileData: await getUserProfileDataFromUID(
+          eventResponse.payload.user
+        ),
         files: eventResponse.payload.files,
       }).then((postResponse) => console.log(postResponse));
     },

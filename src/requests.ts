@@ -10,8 +10,9 @@ const apiURL = `${!Config.api.host.includes("http") ? "http://" : ""}${
 }:${Config.api.port}`;
 
 async function checkApiAlive() {
-  try { await fetch(apiURL); }
-  catch {
+  try {
+    await fetch(apiURL);
+  } catch {
     console.error("Database api is down! Did you start it?");
     return false;
   }
@@ -19,13 +20,13 @@ async function checkApiAlive() {
 }
 
 export async function get(endpoint: string) {
-  await checkApiAlive();
+  if (!(await checkApiAlive())) return;
   const response = await fetch(path.join(apiURL, endpoint));
   return response.json();
 }
 
 export async function postFormData(endpoint: string, data = {}) {
-  await checkApiAlive();
+  if (!(await checkApiAlive())) return;
   // Construct FormData from given data
   const formData = new FormData();
   for (const [k, v] of Object.entries(data))

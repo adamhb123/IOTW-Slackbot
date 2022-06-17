@@ -1,9 +1,9 @@
-// Local modules
-import InitDotenv from "./misc/dotenv";
-
 // Initialize configuration
-InitDotenv();
-
+import EasyConfig from "easyconfig-ts";
+EasyConfig({
+  rootPath: __dirname,
+  dotFiles: ["../.env", "../.env.local", "../.env.template"],
+});
 // Definition of "primitive" is loose here
 type _PrimitiveTypeString =
   | "boolean"
@@ -41,8 +41,10 @@ const _parseEnvVar = (
   }
   return failureDefault;
 };
+
 const _reqMsg = (varName: string) =>
   `${varName} required, please configure your environment variables`;
+
 export const Config = {
   slackbot: {
     signingSecret: _parseEnvVar(
